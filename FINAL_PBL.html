@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EnviroAI - Pollution Map</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+        height: 100%;
+        width: 100%;
+      }
+      
+      body {
+        background-image: url('https://img.freepik.com/free-photo/minimalist-photorealistic-forest-road_23-2150953091.jpg?ga=GA1.1.429993727.1743516394&semt=ais_hybrid&w=740');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        backdrop-filter: blur(12px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 40px 20px;
+      }
+    h2 {
+      font-size: 42px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-bottom: 30px;
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    .control-box {
+      background: rgba(255, 255, 255, 0.8);
+      backdrop-filter: blur(10px);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+      padding: 20px 30px;
+      margin-bottom: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+      animation: slideUp 0.8s ease;
+    }
+
+    select, input[type="date"], button {
+      padding: 12px 18px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+      transition: all 0.25s ease;
+      background-color: #fff;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+    }
+
+    select:focus, input[type="date"]:focus {
+      outline: none;
+      border-color: #607d8b;
+      box-shadow: 0 0 0 2px rgba(96,125,139,0.3);
+    }
+
+    button {
+      background: #1a73e8;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    button:hover {
+      background-color: #4a90e2;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    #goButton {
+      display: none;
+    }
+
+    #map {
+      width: 95%;
+      max-width: 1000px;
+      height: 550px;
+      border-radius: 14px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+      animation: scaleIn 1s ease;
+    }
+
+    /* Animations */
+    @keyframes fadeIn {
+      0% { opacity: 0; transform: translateY(-20px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes slideUp {
+      0% { opacity: 0; transform: translateY(30px); }
+      100% { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes scaleIn {
+      0% { transform: scale(0.95); opacity: 0; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <h2>EnviroAI 🌍 — Your Smart Pollution Guide</h2>
+
+  <div class="control-box">
+    <select id="locationDropdown" onchange="updateMap()"></select>
+    <input type="date" id="datePicker" onchange="toggleGoButton()" />
+    <button id="goButton" onclick="showPrediction()">Show Prediction</button>
+  </div>
+
+  <div id="map"></div>
+
+  <script>
+    function getRandomValue(min, max) {
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    function getControlMeasures(type) {
+      const measures = {
+        air: ["Encourage public transport", "Implement strict emission norms", "Promote green spaces"],
+        noise: ["Restrict honking", "Soundproof buildings", "Monitor industrial noise"],
+        water: ["Improve sewage treatment", "Reduce industrial waste", "Promote rainwater harvesting"]
+      };
+      return measures[type][Math.floor(Math.random() * measures[type].length)];
+    }
+
+    function predictPollutionValue(currentValue, selectedDate) {
+      const today = new Date();
+      const targetDate = new Date(selectedDate);
+      const daysDifference = (targetDate - today) / (1000 * 60 * 60 * 24);
+      const percentageChange = daysDifference > 0 ? 1.05 : 0.95;
+      return Math.round(currentValue * percentageChange);
+    }
+
+    function toggleGoButton() {
+      const datePicker = document.getElementById("datePicker").value;
+      const goButton = document.getElementById("goButton");
+      goButton.style.display = datePicker ? "inline-block" : "none";
+    }
+
+    function showPrediction() {
+      const selectedDate = document.getElementById("datePicker").value;
+      const selectedLocation = document.getElementById("locationDropdown").value;
+      if (!selectedDate) return;
+
+      alert(`📍 Pollution Prediction for ${selectedLocation} on ${selectedDate}:\n
+🌫️ Predicted AQI: ${predictPollutionValue(100, selectedDate)}\n
+🔊 Predicted Noise: ${predictPollutionValue(70, selectedDate)} dB\n
+💧 Predicted WQI: ${predictPollutionValue(60, selectedDate)} WQI`);
+    }
+
+    const statesAndUTs = {
+      "Andhra Pradesh": [15.9129, 79.7400], "Arunachal Pradesh": [27.1004, 93.6167],
+      "Assam": [26.2006, 92.9376], "Bihar": [25.0961, 85.3131], "Chhattisgarh": [21.2787, 81.8661],
+      "Goa": [15.2993, 74.1240], "Gujarat": [22.2587, 71.1924], "Haryana": [29.0588, 76.0856],
+      "Himachal Pradesh": [31.1048, 77.1734], "Jharkhand": [23.6102, 85.2799], "Karnataka": [15.3173, 75.7139],
+      "Kerala": [10.8505, 76.2711], "Madhya Pradesh": [22.9734, 78.6569], "Maharashtra": [19.7515, 75.7139],
+      "Manipur": [24.6637, 93.9063], "Meghalaya": [25.4670, 91.3662], "Mizoram": [23.1645, 92.9376],
+      "Nagaland": [26.1584, 94.5624], "Odisha": [20.9517, 85.0985], "Punjab": [31.1471, 75.3412],
+      "Rajasthan": [27.0238, 74.2179], "Sikkim": [27.5330, 88.5122], "Tamil Nadu": [11.1271, 78.6569],
+      "Telangana": [18.1124, 79.0193], "Tripura": [23.9408, 91.9882], "Uttar Pradesh": [26.8467, 80.9462],
+      "Uttarakhand": [30.0668, 79.0193], "West Bengal": [22.9868, 87.8550], "Delhi (National Capital Territory)": [28.7041, 77.1025],
+      "Andaman and Nicobar Islands": [11.7401, 92.6586], "Chandigarh": [30.7333, 76.7794],
+      "Dadra and Nagar Haveli and Daman and Diu": [20.3974, 72.8328], "Lakshadweep": [10.5667, 72.6417],
+      "Puducherry": [11.9139, 79.8145], "Jammu and Kashmir": [33.2778, 75.3412], "Ladakh": [34.2090, 77.6150]
+    };
+
+    const dropdown = document.getElementById("locationDropdown");
+    for (const state in statesAndUTs) {
+      let option = document.createElement("option");
+      option.value = state;
+      option.textContent = state;
+      dropdown.appendChild(option);
+    }
+
+    const map = L.map('map').setView([20.5937, 78.9629], 5);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    map.on('click', function(event) {
+      const { lat, lng } = event.latlng;
+      let nearestLocation = "Unknown Region";
+      let minDistance = Infinity;
+
+      for (const location in statesAndUTs) {
+        const [locLat, locLng] = statesAndUTs[location];
+        const distance = Math.sqrt(Math.pow(lat - locLat, 2) + Math.pow(lng - locLng, 2));
+        if (distance < minDistance) {
+          minDistance = distance;
+          nearestLocation = location;
+        }
+      }
+
+      let pollutionInfo = `
+        <b>📍 Pollution Data for ${nearestLocation}:</b><br><br>
+        <b>📌 Latitude:</b> ${lat.toFixed(4)}<br>
+        <b>📌 Longitude:</b> ${lng.toFixed(4)}<br><br>
+        <b>🌫️ Air Quality Index:</b> ${getRandomValue(50, 150)} AQI<br>
+        <b>🛠️ Control Measure:</b> ${getControlMeasures("air")}<br><br>
+        <b>🔊 Noise Levels:</b> ${getRandomValue(60, 90)} dB<br>
+        <b>🛠️ Control Measure:</b> ${getControlMeasures("noise")}<br><br>
+        <b>💧 Water Quality Index:</b> ${getRandomValue(40, 80)} WQI<br>
+        <b>🛠️ Control Measure:</b> ${getControlMeasures("water")}
+      `;
+      L.popup().setLatLng([lat, lng]).setContent(pollutionInfo).openOn(map);
+    });
+
+    function updateMap() {
+      const selectedLocation = dropdown.value;
+      if (selectedLocation in statesAndUTs) {
+        const [lat, lng] = statesAndUTs[selectedLocation];
+        map.setView([lat, lng], 7);
+      }
+    }
+  </script>
+</body>
+</html>
